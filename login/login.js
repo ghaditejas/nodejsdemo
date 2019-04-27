@@ -39,7 +39,6 @@ var mc = require('../connection');
 module.exports.login_auth = function (login_credentials) {
     return new Promise(function(resolve, reject) {
         var password = crypto.createHash('md5').update(login_credentials.password).digest('hex');
-        console.log(password);
         mc.query("SELECT * FROM admin_users WHERE username = '" + login_credentials.username + "' AND password = '" + password + "'", function (error, results, fields) {
             if (error) {
                 console.log(error);
@@ -47,7 +46,7 @@ module.exports.login_auth = function (login_credentials) {
             } else if (results.length == 0) {
                 reject({ error: true, message: 'Authentication Error' });
             } else {
-                resolve({ error: false, message: 'Login Successful' });
+                resolve({ error: false, message: 'Login Successful', token:results[0]['token'] });
             }
         });
     });

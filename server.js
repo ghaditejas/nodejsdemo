@@ -29,6 +29,9 @@ var app=express();
 var bodyParser = require('body-parser');
 var request = require('request');
 var api_login = require('./login/login');
+var categories = require('./category/category');
+var auth = require('./authentication');
+
 //var crypto = require('crypto');
 //var mc = require('./connection');
 
@@ -72,11 +75,15 @@ app.post('/login', function (req, res) {
 
 app.post('/add_user', function(req, res){
     var user_data = req.body;
-    api_login.insertUser(user_data).then(function(success){
+    var header_token = req.get('token');
+    auth.authenticateUser(user_data.userid,header_token).then(function(success){
+        return api_login.insertUser(user_data);
+    }).then(function(success){
         return res.send(success);
-    }).catch( function(error){
-        return res.send(error);
-    });
+     }).catch( function(error){
+         return res.send(error);
+     });
+
     
 //app.post('/add_user', function(req, res){
 //    var user_data = req.body;
@@ -136,4 +143,29 @@ app.get('/api_call_request_api', async function(req, res){
     console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
     console.log('body:', body); // Print the HTML for the Google homepage.
   }); 
+});
+
+app.get('/getCategories', async function(req,res){
+//    console.log(categories);
+   var categories_data = await categories.getCategory();
+   return res.send({'error': false, 'data':categories_data});
+});
+
+app.post('/insertCategory', async function(req,res){
+   var categoryData = req.body;
+   var result =  await categories.insertCategory(categoryData);
+//   console.log(result);
+   return res.send(result);
+   
+});
+
+app.post('/updateCategory/:id', function(req,res){
+    var category_id = req.params.id;
+    var categoryData = req.body;
+    categories.updateCategory(categoryData, category_id).then(function(success){
+        res.send(success);
+    }).catch(function(error){
+        res.send(error);
+    });
+//    return res.send(result);
 });
